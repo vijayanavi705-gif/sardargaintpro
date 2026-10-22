@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Client Dashboard - Cloud Console</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --primary: #c90035;
+      --primary-hover: #b0002f;
+      --secondary: #007bff;
+      --secondary-hover: #0056b3;
+      --accent: #17a2b8;
+      --dark-background: #1e293b;
+      --dark-foreground: #f8fafc;
+      --dark-muted-foreground: #94a3b8;
+      --dark-border: #334155;
+      --dark-card-background: #1f2937;
+      --dark-input: #4b5563;
+      --radius: 0.75rem;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--dark-background);
+      color: var(--dark-foreground);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: 16rem;
+      min-height: 100vh;
+      background-color: #1a232f;
+      position: fixed;
+      top: 0;
+      left: 0;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+    }
+
+    .main-content {
+      margin-left: 16rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background-color: var(--dark-background);
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--dark-border);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      transition: all 0.2s;
+      color: var(--dark-muted-foreground);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      background-color: var(--dark-border);
+      color: var(--dark-foreground);
+    }
+
+    .card {
+      background-color: var(--dark-card-background);
+      border: 1px solid var(--dark-border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .progress-bar-bg {
+      background-color: var(--dark-border);
+      border-radius: 9999px;
+      height: 0.75rem;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: var(--primary);
+      transition: width 0.5s ease;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        min-height: auto;
+        position: relative;
+        padding-bottom: 0;
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-slate-900 text-slate-50">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="mb-6 pb-6 border-b border-slate-700">
+      <h2 class="text-xl font-bold text-white mb-1">Sardar Giants</h2>
+      <p class="text-xs text-slate-400">Cloud Console</p>
+    </div>
+    <ul class="space-y-2">
+      <!-- Unified Navigation logic -->
+      <li><a href="{{ url_for('client_dashboard', id=session.id) }}" class="nav-link active">📊 Dashboard</a></li>
+      <li><a href="{{ url_for('storage', id=session.id) }}" class="nav-link">📁 My Files</a></li>
+      <li><a href="{{ url_for('client_billing', id=session.id) }}" class="nav-link">💳 Billing</a></li>
+      <li><a href="{{ url_for('client_support', id=session.id) }}" class="nav-link">💬 Support</a></li>
+      <li><a href="{{ url_for('notification', id=session.id) }}" class="nav-link">🔔 Notification</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <header>
+      <div>
+        <h1 class="text-2xl font-semibold">{{ session.name }}</h1>
+        <p class="text-sm text-slate-400">Manage your cloud services</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="text-sm text-slate-400">{{ session.role | capitalize }}</span>
+        <a href="{{ url_for('logout') }}"
+          class="py-2 px-4 rounded-full text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition">Sign
+          Out</a>
+      </div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div id="flash-container"
+        class="absolute inset-0 flex flex-col items-center justify-start pt-2 z-50 pointer-events-none space-y-2">
+        {% for category, message in messages %}
+        <div class="flash-message pointer-events-auto rounded-lg px-4 py-2 text-sm font-medium shadow-lg opacity-0 transform translate-y-2 transition duration-300
+                          {{ 'bg-red-500 text-white' if category == 'error' else 'bg-green-500 text-white' }}">
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+    </header>
+
+    <main class="p-8">
+      <!-- Welcome Banner -->
+      <div class="mb-8">
+        <h2 class="text-3xl font-bold mb-2">Welcome back, {{ session.name }}!</h2>
+        <p class="text-slate-400">Manage your files, billing, and support requests from here.</p>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Storage Card -->
+        <div class="card">
+          <h3 class="text-lg font-semibold text-blue-400 flex items-center gap-2 mb-4">
+            <span class="text-slate-100">💾</span> Storage Usage
+          </h3>
+          <div class="flex items-end justify-between mb-2">
+            <span class="text-3xl font-bold text-white">{{ storage_used|round(2) }} MB</span>
+            <span class="text-sm text-slate-400 mb-1">of {{ session.allocated_storage }} MB</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill"
+              style="width: {{ (storage_used / session.allocated_storage * 100)|round(0) }}%;"></div>
+          </div>
+          <a href="{{ url_for('storage', id=session.id) }}"
+            class="text-sm text-blue-400 hover:text-blue-300 mt-4 inline-block">Manage Files →</a>
+        </div>
+
+        <!-- Billing Card -->
+        <div class="card">
+          <h3 class="text-lg font-semibold text-blue-400 flex items-center gap-2 mb-4">
+            <span class="text-slate-100">💳</span> Subscription
+          </h3>
+          <p class="text-sm text-slate-400 mb-1">Next Payment Due:</p>
+          <p class="text-xl font-bold text-white mb-4">
+            {% if session.next_payment %}
+            {{ session.next_payment[:10] }}
+            {% else %}
+            N/A
+            {% endif %}
+          </p>
+          <a href="{{ url_for('client_billing', id=session.id) }}"
+            class="text-sm text-blue-400 hover:text-blue-300 mt-4 inline-block">View Details →</a>
+        </div>
+
+        <!-- Support Card -->
+        <div class="card">
+          <h3 class="text-lg font-semibold text-blue-400 flex items-center gap-2 mb-4">
+            <span class="text-slate-100">💬</span> Support
+          </h3>
+          <p class="text-slate-400 text-sm mb-4">Need help with your account or storage?</p>
+          <a href="{{ url_for('client_support', id=session.id) }}"
+            class="text-sm text-blue-400 hover:text-blue-300 mt-4 inline-block">Open Ticket →</a>
+        </div>
+      </div>
+
+    </main>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const flashMessages = document.querySelectorAll('.flash-message');
+      flashMessages.forEach((msg, i) => {
+        setTimeout(() => {
+          msg.classList.add('opacity-100', 'translate-y-0'); // show
+        }, 100 * i);
+
+        setTimeout(() => {
+          msg.classList.remove('opacity-100');
+          msg.classList.add('opacity-0');
+          msg.addEventListener('transitionend', () => msg.remove());
+        }, 2000 + (i * 100));
+      });
+    });
+  </script>
+</body>
+
+</html>

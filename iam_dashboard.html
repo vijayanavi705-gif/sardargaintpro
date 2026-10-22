@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>IAM Management - Sardargiants Cloud</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --primary: #c90035;
+      --primary-hover: #b0002f;
+      --secondary: #007bff;
+      --secondary-hover: #0056b3;
+      --accent: #17a2b8;
+      --dark-background: #1e293b;
+      --dark-foreground: #f8fafc;
+      --dark-muted-foreground: #94a3b8;
+      --dark-border: #334155;
+      --dark-card-background: #1f2937;
+      --dark-input: #4b5563;
+      --radius: 0.75rem;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--dark-background);
+      color: var(--dark-foreground);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: 16rem;
+      min-height: 100vh;
+      background-color: #1a232f;
+      position: fixed;
+      top: 0;
+      left: 0;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+    }
+
+    .main-content {
+      margin-left: 16rem;
+      flex-grow: 1;
+    }
+
+    main {
+      padding: 2rem;
+    }
+
+    header {
+      background-color: var(--dark-background);
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--dark-border);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        min-height: auto;
+        position: relative;
+        padding-bottom: 0;
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+    }
+
+    .card {
+      background-color: var(--dark-card-background);
+      border: 1px solid var(--dark-border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-input {
+      width: 100%;
+      background-color: var(--dark-input);
+      border: 1px solid var(--dark-border);
+      color: var(--dark-foreground);
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(201, 0, 53, 0.5);
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      transition: all 0.2s;
+      color: var(--dark-muted-foreground);
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      background-color: var(--dark-border);
+      color: var(--dark-foreground);
+    }
+
+    .btn-primary {
+      background-color: rgba(7, 148, 7, 0.682);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      transition: background-color 0.2s;
+    }
+
+    .btn-primary:hover {
+      background-color: rgba(8, 113, 8, 0.66);
+    }
+
+    .btn-danger {
+      background-color: #dc3545;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      transition: background-color 0.2s;
+    }
+
+    .btn-danger:hover {
+      background-color: #c82333;
+    }
+
+    .filter-select {
+      background-color: var(--dark-input);
+      border: 1px solid var(--dark-border);
+      color: var(--dark-foreground);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      transition: all 0.2s ease-in-out;
+    }
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(201, 0, 53, 0.3);
+    }
+
+    .login-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.6875rem;
+      font-weight: 500;
+    }
+    .login-badge.recent { background-color: rgba(34, 197, 94, 0.15); color: #4ade80; }
+    .login-badge.old { background-color: rgba(234, 179, 8, 0.15); color: #facc15; }
+    .login-badge.never { background-color: rgba(239, 68, 68, 0.15); color: #f87171; }
+  </style>
+</head>
+
+<body class="bg-slate-900 text-slate-50">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="mb-6 pb-6 border-b border-slate-700">
+      <h2 class="text-xl font-bold text-white mb-1">Sardar Giants</h2>
+      <p class="text-xs text-slate-400">Cloud Console</p>
+    </div>
+    <ul class="space-y-2">
+      <li><a href="{{ url_for('root_dashboard', id=session.id) }}" class="nav-link">📊 Dashboard</a></li>
+      <li><a href="{{ url_for('iam_dashboard', id=session.id) }}" class="nav-link active">👁️‍🗨️ IAM</a></li>
+      <li><a href="{{ url_for('client_management', id=session.id) }}" class="nav-link">👤 Manage Clients</a></li>
+      <li><a href="{{ url_for('admin_support', id=session.id) }}" class="nav-link">💬 Support Tickets</a></li>
+      <li><a href="{{ url_for('billing_management', id=session.id) }}" class="nav-link">💳 Billing Requests</a>
+      </li>
+      <li><a href="{{ url_for('storage', id=session.id) }}" class="nav-link">📁 My Files</a></li>
+      <li><a href="{{ url_for('notification', id=session.id) }}" class="nav-link">🔔 Notification</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content flex flex-col">
+    <header>
+      <div>
+        <h1 class="text-2xl font-semibold">{{ session.name }}</h1>
+        <p class="text-sm text-slate-400">Manage Admins & Access</p>
+      </div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div id="flash-container"
+        class="absolute inset-0 flex flex-col items-center justify-start pt-2 z-50 pointer-events-none space-y-2">
+        {% for category, message in messages %}
+        <div
+          class="flash-message pointer-events-auto rounded-lg px-4 py-2 text-sm font-medium shadow-lg opacity-0 transform translate-y-2 transition duration-300 {{ 'bg-red-500 text-white' if category == 'error' else 'bg-green-500 text-white' }}">
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+      <div class="flex items-center space-x-4">
+        <span class="text-sm text-slate-400">{{ session.role | capitalize }}</span>
+        <a href="{{ url_for('logout') }}"
+          class="py-2 px-4 rounded-full text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition">Sign
+          Out</a>
+      </div>
+    </header>
+
+    <main class="space-y-6">
+      <!-- Add New Admin Card -->
+      <section>
+        <div class="card">
+          <h2 class="text-xl font-bold mb-4 border-b border-slate-700 pb-2">Add New Admin</h2>
+          <form action="{{ url_for('add_admin_iam', id=session.id) }}" method="POST"
+            class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm text-slate-400 mb-1">Name</label>
+              <input type="text" name="name" required class="form-input" placeholder="Admin Name">
+            </div>
+            <div>
+              <label class="block text-sm text-slate-400 mb-1">Email (@sgmail.com)</label>
+              <input type="email" name="email" required class="form-input" placeholder="admin@sgmail.com">
+            </div>
+            <div>
+              <label class="block text-sm text-slate-400 mb-1">Password</label>
+              <input type="text" name="password" required class="form-input" placeholder="Secure Password">
+            </div>
+            <div>
+              <label class="block text-sm text-slate-400 mb-1">Allocated Storage (MB)</label>
+              <input type="number" name="storage" value="10" required class="form-input" placeholder="1024">
+            </div>
+            <div class="md:col-span-2 flex justify-end">
+              <button type="submit" class="btn-primary">Create Admin</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Existing Admins List -->
+      <section>
+        <h2 class="text-3xl font-bold mb-4">Manage Admins</h2>
+        <div class="card">
+          <div class="flex flex-wrap justify-between items-center mb-4 gap-3">
+            <h2 class="text-xl font-semibold text-white">Admin Details</h2>
+            
+            <!-- Search + Filter Controls -->
+            <div class="flex flex-wrap items-center gap-3">
+              <!-- Login Activity Filter -->
+              <div class="flex items-center gap-2">
+                <label class="text-xs text-slate-400 whitespace-nowrap">Login filter:</label>
+                <select id="loginCondition" class="filter-select">
+                  <option value="all">All Admins</option>
+                  <option value="are">Are logged in</option>
+                  <option value="are_not">Are NOT logged in</option>
+                </select>
+                <select id="loginPeriod" class="filter-select" disabled>
+                  <option value="30">Last 30 days</option>
+                  <option value="90">Last 3 months</option>
+                  <option value="180">Last 6 months</option>
+                  <option value="365">Last 1 year</option>
+                </select>
+              </div>
+
+              <!-- Text Search -->
+              <input id="adminSearch" type="text" placeholder="Search by name or email..."
+                class="px-3 py-2 rounded text-white text-sm w-48 form-input">
+            </div>
+          </div>
+
+          <div id="admin-list-container">
+            {% if admins %}
+            {% for admin in admins %}
+            <div class="admin-entry flex flex-col items-stretch py-3 border-b border-slate-800 transition duration-200"
+                 data-last-login="{{ admin.last_login_iso or '' }}">
+              <div class="flex items-center w-full">
+                <!-- Name & Email -->
+                <div class="flex flex-col basis-1/4 min-w-0 pr-4">
+                  <div class="flex items-center gap-2">
+                    <span class="text-white font-medium truncate">{{ admin.name }}</span>
+                    <span class="text-xs bg-blue-900 text-blue-100 px-2 py-0.5 rounded">Admin</span>
+                  </div>
+                  <span class="text-xs text-slate-400 truncate">{{ admin.email }}</span>
+                </div>
+
+                <!-- Storage / Created / Last Login -->
+                <div class="flex items-center basis-3/4 min-w-0 text-sm text-slate-400 space-x-4">
+                  <!-- Limit -->
+                  <span class="flex-shrink-0 whitespace-nowrap">
+                    Limit: {{ admin.allocated_storage }} MB
+                  </span>
+
+                  <!-- Progress Bar -->
+                  <div class="flex-1 min-w-0 bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                    <div class="bg-blue-500 h-2.5" style="width: 5%;"></div>
+                  </div>
+
+                  <!-- Created On -->
+                  <span class="flex-shrink-0 whitespace-nowrap text-sm text-slate-400">
+                    Joined: {{ admin.created_on }}
+                  </span>
+
+                  <!-- Last Login Badge -->
+                  <span class="flex-shrink-0 whitespace-nowrap">
+                    {% if admin.last_login %}
+                      <span class="login-badge recent" title="Last login: {{ admin.last_login }}">🟢 {{ admin.last_login }}</span>
+                    {% else %}
+                      <span class="login-badge never" title="Never logged in">🔴 Never</span>
+                    {% endif %}
+                  </span>
+
+                  <!-- Actions -->
+                  <div class="flex justify-end space-x-3">
+                    <!-- Message button -->
+                    <button onclick="toggleMessageBox('{{ admin.id }}')"
+                      class="text-blue-400 hover:text-blue-300 text-sm">Message</button>
+
+                    <!-- Delete form -->
+                    <form action="{{ url_for('delete_admin', id=session.id) }}" method="POST"
+                      onsubmit="return confirm('Are you sure you want to delete this admin?');">
+                      <input type="hidden" name="target_admin_id" value="{{ admin.id }}">
+                      <button type="submit" class="text-red-400 hover:text-red-300 text-sm">Delete</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hidden message box -->
+              <div id="message-box-{{ admin.id }}" class="hidden mt-2 mb-2 w-full">
+                <form action="{{ url_for('notify_admin', id=session.id) }}" method="POST" class="flex space-x-2">
+                  <input type="hidden" name="target_admin_id" value="{{ admin.id }}">
+                  <textarea name="message" placeholder="Type message..."
+                    class="flex-1 p-2 text-sm rounded text-white form-input" rows="2"></textarea>
+                  <button type="submit"
+                    class="px-3 py-1 bg-blue-500 rounded text-white text-sm hover:bg-blue-600 self-end">Send</button>
+                </form>
+              </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="text-slate-400 py-4">No admins found.</p>
+            {% endif %}
+          </div>
+
+          <!-- No results message -->
+          <div id="no-results" class="hidden py-4 text-center text-slate-500 text-sm">
+            No admins match the current filters.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="p-6 text-center text-sm text-slate-500 border-t border-slate-700 mt-auto">
+      &copy; 2025 Sardargiants Cloud. All rights reserved.
+    </footer>
+  </div>
+
+  <script>
+    function toggleMessageBox(id) {
+      const box = document.getElementById(`message-box-${id}`);
+      box.classList.toggle('hidden');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const searchInput = document.getElementById('adminSearch');
+      const loginCondition = document.getElementById('loginCondition');
+      const loginPeriod = document.getElementById('loginPeriod');
+      const adminEntries = document.querySelectorAll('.admin-entry');
+      const noResults = document.getElementById('no-results');
+
+      // Enable/disable period select based on condition
+      loginCondition.addEventListener('change', () => {
+        loginPeriod.disabled = (loginCondition.value === 'all');
+        applyFilters();
+      });
+
+      loginPeriod.addEventListener('change', applyFilters);
+      searchInput.addEventListener('input', applyFilters);
+
+      function applyFilters() {
+        const query = searchInput.value.toLowerCase();
+        const condition = loginCondition.value;
+        const days = parseInt(loginPeriod.value);
+        const now = new Date();
+        const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+
+        let visibleCount = 0;
+
+        adminEntries.forEach(entry => {
+          const name = entry.querySelector('.font-medium').innerText.toLowerCase();
+          const email = entry.querySelector('span.text-xs.text-slate-400').innerText.toLowerCase();
+          const lastLoginStr = entry.dataset.lastLogin;
+
+          // Text search
+          const matchesSearch = !query || name.includes(query) || email.includes(query);
+
+          // Login activity filter
+          let matchesLogin = true;
+          if (condition !== 'all') {
+            const hasLogin = lastLoginStr && lastLoginStr.length > 0;
+            const loginDate = hasLogin ? new Date(lastLoginStr) : null;
+            const loggedInWithinPeriod = loginDate && loginDate >= cutoff;
+
+            if (condition === 'are') {
+              matchesLogin = loggedInWithinPeriod;
+            } else if (condition === 'are_not') {
+              matchesLogin = !loggedInWithinPeriod;
+            }
+          }
+
+          const visible = matchesSearch && matchesLogin;
+          entry.style.display = visible ? 'flex' : 'none';
+
+          if (visible) visibleCount++;
+        });
+
+        noResults.classList.toggle('hidden', visibleCount > 0);
+      }
+
+      // Flash messages
+      const flashMessages = document.querySelectorAll('.flash-message');
+      flashMessages.forEach((msg, i) => {
+        setTimeout(() => {
+          msg.classList.add('opacity-100', 'translate-y-0');
+        }, 100 * i);
+
+        setTimeout(() => {
+          msg.classList.remove('opacity-100');
+          msg.classList.add('opacity-0');
+          msg.addEventListener('transitionend', () => msg.remove());
+        }, 2000 + (i * 100));
+      });
+    });
+  </script>
+</body>
+
+</html>

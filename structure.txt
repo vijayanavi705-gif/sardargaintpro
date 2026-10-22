@@ -1,0 +1,22 @@
+/project
+├─ /static
+│ ├─ /css
+│ │ ├─ global.css
+│ │ └─ theme.css
+│ ├─ /js
+│ │ ├─ auth.js
+│ │ ├─ dashboard.js
+│ │ └─ upload.js
+│ └─ /icons (optional svg icons)
+├─ /templates
+│ ├─ layout_base.html
+│ ├─ login.html
+│ ├─ root_dashboard.html
+│ ├─ admin_dashboard.html
+│ ├─ client_dashboard.html
+│ ├─ fragments (nav.html, header.html, footer.html)
+├─ /storage
+│ └─ (auto-created per user: <userid>/)
+├─ app.py
+├─ accounts.csv
+├─ requirements.txt

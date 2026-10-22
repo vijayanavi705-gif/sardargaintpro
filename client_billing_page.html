@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Billing - Sardargiants Cloud</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary: #c90035;
+            --primary-hover: #b0002f;
+            --secondary: #007bff;
+            --secondary-hover: #0056b3;
+            --accent: #17a2b8;
+            --dark-background: #1e293b;
+            --dark-foreground: #f8fafc;
+            --dark-muted-foreground: #94a3b8;
+            --dark-border: #334155;
+            --dark-card-background: #1f2937;
+            --dark-input: #4b5563;
+            --destructive: #dc3545;
+            --destructive-hover: #c82333;
+            --radius: 0.75rem;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark-background);
+            color: var(--dark-foreground);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar {
+            width: 16rem;
+            min-height: 100vh;
+            background-color: #1a232f;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .main-content {
+            margin-left: 16rem;
+            flex-grow: 1;
+        }
+
+        main {
+            padding: 2rem;
+        }
+
+        header {
+            background-color: var(--dark-background);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--dark-border);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card {
+            background-color: var(--dark-card-background);
+            border: 1px solid var(--dark-border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+            color: var(--dark-muted-foreground);
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: var(--dark-border);
+            color: var(--dark-foreground);
+        }
+
+        .form-input {
+            width: 100%;
+            background-color: var(--dark-input);
+            border: 1px solid var(--dark-border);
+            color: var(--dark-foreground);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(201, 0, 53, 0.5);
+        }
+
+        /* QR lightbox modal */
+        .qr-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .qr-overlay.active {
+            display: flex;
+        }
+        .qr-overlay img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 1rem;
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+        }
+
+        /* File upload styling */
+        .file-upload-area {
+            border: 2px dashed var(--dark-border);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .file-upload-area:hover {
+            border-color: var(--primary);
+            background-color: rgba(201, 0, 53, 0.05);
+        }
+        .file-upload-area.has-file {
+            border-color: #22c55e;
+            background-color: rgba(34, 197, 94, 0.05);
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900 text-slate-50">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="mb-6 pb-6 border-b border-slate-700">
+            <h2 class="text-xl font-bold text-white mb-1">Sardar Giants</h2>
+      <p class="text-xs text-slate-400">Cloud Console</p>
+        </div>
+        <ul class="space-y-2">
+            <li><a href="{{ url_for('client_dashboard', id = session.id) }}" class="nav-link">📊 Dashboard</a></li>
+            <li><a href="{{ url_for('storage', id = session.id) }}" class="nav-link">📁 My Files</a></li>
+            <li><a href="{{ url_for('client_billing', id = session.id) }}" class="nav-link active">💳 Billing</a></li>
+            <li><a href="{{ url_for('client_support', id = session.id) }}" class="nav-link">💬 Support</a></li>
+            <li><a href="{{ url_for('notification', id = session.id) }}" class="nav-link">🔔 Notification</a></li>
+
+        </ul>
+    </nav>
+
+    <!-- QR Lightbox Modal -->
+    <div id="qr-lightbox" class="qr-overlay" onclick="this.classList.remove('active')">
+        <img src="{{ url_for('static', filename='payment_qr.png') }}" alt="Payment QR Code">
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content flex flex-col">
+        <!-- Header -->
+        <header>
+            <div>
+                <h1 class="text-2xl font-semibold">{{ session.name }}</h1>
+                <p class="text-sm text-slate-400">Manage your cloud services</p>
+            </div>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div id="flash-container"
+                class="absolute inset-0 flex flex-col items-center justify-start pt-2 z-50 pointer-events-none space-y-2">
+                {% for category, message in messages %}
+                <div class="flash-message pointer-events-auto rounded-lg px-4 py-2 text-sm font-medium shadow-lg opacity-0 transform translate-y-2 transition duration-300
+                          {{ 'bg-red-500 text-white' if category == 'error' else 'bg-green-500 text-white' }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-slate-400">{{ session.role | capitalize }}</span>
+                <a href="{{ url_for('logout') }}"
+                    class="py-2 px-4 rounded-full text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition">Sign
+                    Out</a>
+            </div>
+        </header>
+
+        <!-- Main sections -->
+        <main>
+            <!-- Billing Section -->
+            <section id="billing" class="mb-8">
+                <h2 class="text-3xl font-bold mb-4">Billing</h2>
+                <div class="card p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-semibold text-white">Monthly Billing Plan</h3>
+                        <span class="text-sm text-green-400">💳</span>
+                    </div>
+                    <p class="text-2xl font-bold text-white">{{ session.allocated_storage }} MB</p>
+                    <p class="text-sm text-slate-400">Next payment on {{ session.next_payment }}</p>
+                    <div class="mt-4">
+                        <h3 class="font-semibold mb-2">Storage Used</h3>
+                        <p class="text-2xl font-bold text-white">{{ storage_used | round(2) }} MB</p>
+                        <p class="text-sm text-slate-400">of {{ session.allocated_storage | float | round(2) }} MB</p>
+                        <div class="w-full bg-slate-700 rounded-full h-2.5 mt-2">
+                            <div class="bg-blue-500 h-2.5 rounded-full"
+                                style="width: {{ ((storage_used / session['allocated_storage'] | float) * 100) | round(2) }}%;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Payment QR Code Section -->
+            <section id="payment-qr" class="mb-8">
+                <h2 class="text-3xl font-bold mb-4">Payment</h2>
+                <div class="card p-6">
+                    <div class="flex flex-col md:flex-row items-center gap-6">
+                        <div class="flex-shrink-0">
+                            <p class="text-sm text-slate-400 mb-3 text-center">Scan to Pay</p>
+                            <img src="{{ url_for('static', filename='payment_qr.png') }}" 
+                                 alt="Payment QR Code" 
+                                 class="w-48 h-48 rounded-lg border-2 border-slate-600 object-cover cursor-pointer hover:border-blue-500 transition-all hover:shadow-lg hover:shadow-blue-500/20"
+                                 onclick="document.getElementById('qr-lightbox').classList.add('active')"
+                                 title="Click to enlarge" />
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-white text-lg mb-2">How to Pay</h3>
+                            <ol class="list-decimal list-inside text-sm text-slate-300 space-y-2">
+                                <li>Scan the QR code using any UPI app (Google Pay, PhonePe, Paytm, etc.)</li>
+                                <li>Pay the calculated amount shown below in the request form</li>
+                                <li>Take a screenshot of the payment confirmation</li>
+                                <li>Upload the screenshot in the form below and submit your request</li>
+                            </ol>
+                            <div class="mt-4 p-3 bg-slate-800 rounded-lg border border-slate-600">
+                                <p class="text-xs text-slate-400">💡 <strong class="text-slate-300">Pricing:</strong> 10 MB = ₹5 / month</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Storage Request Section -->
+            <section id="storage-request" class="mb-8">
+                <h2 class="text-3xl font-bold mb-4">Request Storage Change</h2>
+                <div class="card p-6">
+                    <form method="POST" action="{{ url_for('submit_storage_request', id = session.id) }}"
+                        class="space-y-4" enctype="multipart/form-data">
+
+                        <!-- Phone Number -->
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Phone Number</label>
+                            <input type="tel" name="phone_number" pattern="[0-9]{10}" required
+                                placeholder="Enter your 10-digit phone number" class="form-input" />
+                        </div>
+
+                        <!-- Request Type -->
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Request Type</label>
+                            <select name="request_type" id="request_type" class="form-input" required>
+                                <option value="same" selected>Continue Current Storage Plan</option>
+                                <option value="extend">Extend Storage Plan</option>
+                                <option value="shrink">Shrink Storage Plan</option>
+                            </select>
+                        </div>
+
+                        <!-- Storage + Amount Row -->
+                        <div class="flex gap-4">
+                            <!-- Storage Amount -->
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium mb-1" id="storage_label">Storage Space (MB)</label>
+                                <input type="number" id="storage_input" name="storage_needed" min="0" required
+                                    placeholder="e.g. 50" class="form-input" value="0"
+                                    disabled />
+                                <p class="text-xs text-slate-400 mt-1" id="storage_hint">No change for "Continue" plan.</p>
+                            </div>
+
+                            <!-- Amount Calculation -->
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium mb-1">Amount Calculation (Current plan: {{session.allocated_storage | float | round(2)}} MB / ₹{{session.allocated_storage | float / 10 * 5}})</label>
+                                <div id="amount-display" class="form-input flex items-center font-semibold">
+                                    ₹0.00 / month
+                                </div>
+                                <p class="text-xs text-slate-400 mt-1">
+                                    Calculated using 10 MB = ₹5 per month.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Payment Proof Upload -->
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Payment Screenshot (Proof)</label>
+                            <div class="file-upload-area" id="upload-area" onclick="document.getElementById('payment_proof').click()">
+                                <input type="file" id="payment_proof" name="payment_proof" accept="image/*" class="hidden" />
+                                <div id="upload-placeholder">
+                                    <p class="text-slate-400 text-sm">📸 Click to upload payment screenshot</p>
+                                    <p class="text-xs text-slate-500 mt-1">Supports JPG, PNG, WEBP</p>
+                                </div>
+                                <div id="upload-preview" class="hidden">
+                                    <img id="preview-img" class="max-h-32 mx-auto rounded-lg mb-2" />
+                                    <p id="preview-name" class="text-sm text-green-400"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Message -->
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Reason / Description</label>
+                            <textarea name="message" rows="3" required
+                                placeholder="Describe why you want to extend or shrink your storage"
+                                class="form-input"></textarea>
+                        </div>
+
+                        <button type="submit"
+                            class="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold">
+                            Submit Request
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="p-6 text-center text-sm text-slate-500 border-t border-slate-700 mt-auto">
+            &copy; 2025 Sardargiants Cloud. All rights reserved.
+        </footer>
+    </div>
+
+    <!-- JavaScript for Dynamic Amount Calculation -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const storageInput = document.getElementById('storage_input');
+            const requestType = document.getElementById('request_type');
+            const amountDisplay = document.getElementById('amount-display');
+            const storageLabel = document.getElementById('storage_label');
+            const storageHint = document.getElementById('storage_hint');
+            const paymentProofInput = document.getElementById('payment_proof');
+            const uploadArea = document.getElementById('upload-area');
+            const uploadPlaceholder = document.getElementById('upload-placeholder');
+            const uploadPreview = document.getElementById('upload-preview');
+            const previewImg = document.getElementById('preview-img');
+            const previewName = document.getElementById('preview-name');
+
+            const currentStorage = {{ session.allocated_storage | float }};
+            const pricePer10MB = 5;
+
+            function calculateAmount() {
+                const type = requestType.value;
+
+                if (type === 'same') {
+                    // "Continue" — no storage change, pay same amount
+                    storageInput.value = 0;
+                    storageInput.disabled = true;
+                    storageLabel.textContent = 'Storage Space (MB) — No change';
+                    storageHint.textContent = 'Your current plan will be renewed as-is.';
+                    const currentAmount = (currentStorage / 10) * pricePer10MB;
+                    amountDisplay.textContent = `₹${currentAmount.toFixed(2)} / month`;
+                    return;
+                }
+
+                storageInput.disabled = false;
+                const delta = parseFloat(storageInput.value) || 0;
+
+                if (type === 'extend') {
+                    storageLabel.textContent = 'Additional Storage (MB)';
+                    storageHint.textContent = `You currently have ${currentStorage} MB. Enter how much MORE you want.`;
+                    storageInput.min = 1;
+                    const newTotal = currentStorage + delta;
+                    const totalAmount = (newTotal / 10) * pricePer10MB;
+                    amountDisplay.textContent = `₹${totalAmount.toFixed(2)} / month (${currentStorage} + ${delta} = ${newTotal} MB)`;
+                } else if (type === 'shrink') {
+                    storageLabel.textContent = 'Reduce Storage By (MB)';
+                    storageHint.textContent = `You currently have ${currentStorage} MB. Enter how much to REDUCE.`;
+                    storageInput.min = 1;
+                    storageInput.max = currentStorage - 1;
+                    const newTotal = Math.max(1, currentStorage - delta);
+                    const totalAmount = (newTotal / 10) * pricePer10MB;
+                    amountDisplay.textContent = `₹${totalAmount.toFixed(2)} / month (${currentStorage} - ${delta} = ${newTotal} MB)`;
+                }
+            }
+
+            // File upload preview
+            paymentProofInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        previewImg.src = ev.target.result;
+                        previewName.textContent = file.name;
+                        uploadPlaceholder.classList.add('hidden');
+                        uploadPreview.classList.remove('hidden');
+                        uploadArea.classList.add('has-file');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    uploadPlaceholder.classList.remove('hidden');
+                    uploadPreview.classList.add('hidden');
+                    uploadArea.classList.remove('has-file');
+                }
+            });
+
+            storageInput.addEventListener('input', calculateAmount);
+            requestType.addEventListener('change', calculateAmount);
+
+            calculateAmount(); // Initial calculation
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach((msg, i) => {
+                setTimeout(() => {
+                    msg.classList.add('opacity-100', 'translate-y-0'); // show
+                }, 100 * i);
+
+                setTimeout(() => {
+                    msg.classList.remove('opacity-100');
+                    msg.classList.add('opacity-0');
+                    msg.addEventListener('transitionend', () => msg.remove());
+                }, 2000 + (i * 100));
+            });
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,19 @@
+databases:
+  - name: sardargiantscloud-db
+    databaseName: sardargiantscloud
+    user: sardargiantscloud
+    plan: free
+
+services:
+  - type: web
+    name: sardargiantscloud
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sardargiantscloud-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
